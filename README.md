@@ -10,8 +10,9 @@ for European organizations.
 
 ## Status
 
-🚧 **Milestone 0 — Scaffolding.** Runnable skeleton: infrastructure, backend app
-shell, database schema migration, and frontend shell. No business logic yet.
+🚧 **Milestone 1 — Auth, tenancy & RBAC.** Self-hosted JWT auth, multi-tenant
+registration/login, role-based access control, and two-layer tenant isolation on top
+of the Milestone 0 skeleton.
 
 See [docs/architecture/0001-architecture.md](docs/architecture/0001-architecture.md)
 for the full architecture and roadmap.
@@ -50,6 +51,39 @@ docker compose exec backend alembic upgrade head      # apply migrations
 docker compose exec backend alembic revision -m "msg" # create a new one
 ```
 
+Run `alembic upgrade head` before first use — it creates the schema, seeds the RBAC
+roles (`admin`, `analyst`, `viewer`), and installs the Row-Level Security policies.
+
+### Authentication (self-hosted JWT)
+
+- `POST /api/v1/auth/register` — creates a new tenant + its first **admin** user, returns tokens.
+- `POST /api/v1/auth/login` — `{tenant_slug, email, password}` → access + refresh tokens.
+- `POST /api/v1/auth/refresh` — exchange a refresh token for fresh tokens.
+- `GET  /api/v1/auth/me` — current user profile (send `Authorization: Bearer <access>`).
+- `GET/POST /api/v1/users …` — tenant user management (admin only).
+
+### Tenant isolation
+
+Two layers: (1) an **application-layer guard** auto-filters every query on a
+tenant-scoped model by the request's tenant; (2) **PostgreSQL Row-Level Security**
+policies as defense in depth. RLS is only enforced when the app connects as a
+*non-superuser* role — for production, create a dedicated login role and point the
+backend's `DATABASE_URL` at it. In development (superuser connection) the
+application-layer guard is the active enforcement.
+
+### Testing
+
+```bash
+cd backend
+pip install -r requirements.txt
+pytest                                   # unit tests (no DB) always run
+TEST_DATABASE_URL=postgresql+psycopg://emphasys:change-me-in-prod@localhost:5432/emphasys_test \
+  pytest                                 # also runs DB-backed integration tests
+```
+
+Integration tests (auth flow, RBAC, cross-tenant isolation) skip automatically when
+`TEST_DATABASE_URL` is unset or unreachable.
+
 ## Repository layout
 
 ```
@@ -61,8 +95,8 @@ infra/      Deployment / IaC (added in a later milestone)
 
 ## Roadmap (milestones)
 
-0. **Scaffolding** ← current
-1. Auth + tenancy + users/RBAC
+0. **Scaffolding** ✅
+1. Auth + tenancy + users/RBAC ← current
 2. Document upload & management
 3. AI extraction pipeline (single proposal)
 4. Partner/organization registry + entity resolution

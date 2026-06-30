@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     secret_key: str = "change-me"
 
+    # Auth / JWT
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
+
     # Database
     postgres_user: str = "emphasys"
     postgres_password: str = "change-me-in-prod"

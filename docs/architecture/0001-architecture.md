@@ -27,9 +27,11 @@ product but is intended to be commercialized as a SaaS for European organization
    high-volume/low-cost work — using structured tool-use so output is schema-validated.
    Every extracted field stores the producing model, a confidence score, and source
    page provenance.
-5. **Auth: Clerk (managed).** Clerk handles sign-in, SSO, and MFA and issues JWTs. The
-   backend verifies the JWT against Clerk's JWKS and maps the Clerk user to a local
-   `users` row. Authorization (RBAC roles/permissions) is owned by our database.
+5. **Auth: self-hosted JWT** (decided 2026-06-30; supersedes the earlier Clerk choice
+   as the client has no Clerk account). The backend owns password hashing (bcrypt),
+   JWT access/refresh tokens, and sessions. Authorization (RBAC roles/permissions) is
+   owned by our database. The `users.auth_provider_id` column and a swappable
+   verification layer are retained so Clerk/SSO can be added later without a rewrite.
 6. **Database: PostgreSQL 16 + pgvector** — relational store and semantic search in one
    engine. SQLAlchemy 2.0 + Alembic for models and migrations.
 7. **Async processing: Celery + Redis.** PDF analysis is slow and must run off the

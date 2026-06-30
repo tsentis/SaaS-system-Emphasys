@@ -20,8 +20,9 @@ boto3==1.35.90
 # ---- AI ----
 anthropic==0.42.0
 
-# ---- Auth (JWT verification) ----
+# ---- Auth (self-hosted JWT + password hashing) ----
 pyjwt[crypto]==2.10.1
+bcrypt==4.2.1
 httpx==0.28.1
 
 # ---- Utilities ----

@@ -13,7 +13,9 @@ class User(Base, UUIDPrimaryKey, TenantScoped, Timestamped):
     __tablename__ = "users"
     __table_args__ = (UniqueConstraint("tenant_id", "email"),)
 
-    # Maps to the external Clerk user id; authorization stays in our DB.
+    # Set for self-hosted password auth; null for externally-provisioned (SSO) users.
+    password_hash: Mapped[str | None] = mapped_column()
+    # Reserved for a future external identity provider (Clerk/SSO).
     auth_provider_id: Mapped[str | None] = mapped_column(unique=True, index=True)
     email: Mapped[str] = mapped_column(nullable=False, index=True)
     full_name: Mapped[str | None] = mapped_column()
