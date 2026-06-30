@@ -1,0 +1,9 @@
+# Normalize line endings: store as LF in the repo, check out native on Windows.
+* text=auto eol=lf
+
+# Binary / non-diffable
+*.pdf binary
+*.png binary
+*.jpg binary
+*.xlsx binary
+*.docx binary
