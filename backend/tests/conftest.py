@@ -52,6 +52,7 @@ def client(engine):
     from fastapi.testclient import TestClient
 
     from app.core.db import get_db
+    from app.core.storage import InMemoryStorage, get_storage
     from app.main import app
 
     TestSession = sessionmaker(
@@ -76,11 +77,13 @@ def client(engine):
         finally:
             db.close()
 
+    storage = InMemoryStorage()
     app.dependency_overrides[get_db] = _override_get_db
+    app.dependency_overrides[get_storage] = lambda: storage
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
 
     with engine.begin() as conn:
-        for table in ("user_roles", "users", "tenants"):
+        for table in ("audit_log", "documents", "user_roles", "users", "tenants"):
             conn.execute(text(f"DELETE FROM {table}"))

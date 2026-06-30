@@ -18,11 +18,14 @@ class Document(Base, UUIDPrimaryKey, TenantScoped, Timestamped):
     sha256: Mapped[str | None] = mapped_column(index=True)
     mime_type: Mapped[str | None] = mapped_column()
     page_count: Mapped[int | None] = mapped_column()
+    size_bytes: Mapped[int | None] = mapped_column()
     # uploaded | processing | done | failed
     status: Mapped[str] = mapped_column(default="uploaded", nullable=False, index=True)
     uploaded_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
     )
+    # Soft delete: non-null means the document is hidden from listings.
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class AnalysisRun(Base, UUIDPrimaryKey, TenantScoped, Timestamped):

@@ -10,9 +10,9 @@ for European organizations.
 
 ## Status
 
-🚧 **Milestone 1 — Auth, tenancy & RBAC.** Self-hosted JWT auth, multi-tenant
-registration/login, role-based access control, and two-layer tenant isolation on top
-of the Milestone 0 skeleton.
+🚧 **Milestone 2 — Document upload & management.** PDF upload to object storage with
+SHA-256 dedup, page counting, soft-delete, presigned downloads, and audit logging — on
+top of the Milestone 1 auth/tenancy foundation.
 
 See [docs/architecture/0001-architecture.md](docs/architecture/0001-architecture.md)
 for the full architecture and roadmap.
@@ -62,6 +62,19 @@ roles (`admin`, `analyst`, `viewer`), and installs the Row-Level Security polici
 - `GET  /api/v1/auth/me` — current user profile (send `Authorization: Bearer <access>`).
 - `GET/POST /api/v1/users …` — tenant user management (admin only).
 
+### Documents
+
+- `POST   /api/v1/documents` — multipart PDF upload (admin/analyst). Computes SHA-256,
+  dedups within the tenant, counts pages, stores in object storage, audit-logs.
+- `GET    /api/v1/documents` — list the tenant's documents (any role).
+- `GET    /api/v1/documents/{id}` — document metadata.
+- `GET    /api/v1/documents/{id}/download` — presigned download URL.
+- `DELETE /api/v1/documents/{id}` — soft delete (admin/analyst).
+
+Uploads are proxied through the backend (rather than browser-side presigned PUT) so
+the SHA-256, page count, and validation happen inline. Presigned direct uploads are a
+planned optimization for very large files.
+
 ### Tenant isolation
 
 Two layers: (1) an **application-layer guard** auto-filters every query on a
@@ -96,8 +109,8 @@ infra/      Deployment / IaC (added in a later milestone)
 ## Roadmap (milestones)
 
 0. **Scaffolding** ✅
-1. Auth + tenancy + users/RBAC ← current
-2. Document upload & management
+1. Auth + tenancy + users/RBAC ✅
+2. Document upload & management ← current
 3. AI extraction pipeline (single proposal)
 4. Partner/organization registry + entity resolution
 5. Search & filtering

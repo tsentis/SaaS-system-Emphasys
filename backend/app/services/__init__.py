@@ -1,5 +1,5 @@
 """Business-logic services."""
 
-from app.services import auth_service, user_service
+from app.services import audit_service, auth_service, document_service, user_service
 
-__all__ = ["auth_service", "user_service"]
+__all__ = ["audit_service", "auth_service", "document_service", "user_service"]
