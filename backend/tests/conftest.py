@@ -87,6 +87,8 @@ def client(engine):
     with engine.begin() as conn:
         for table in (
             "audit_log",
+            "embeddings",
+            "external_enrichment",
             "project_partners",
             "work_packages",
             "analysis_runs",

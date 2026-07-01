@@ -11,11 +11,30 @@ from datetime import UTC, datetime
 from sqlalchemy.orm import Session
 
 from app.ai import text as text_util
+from app.ai.embedder import Embedder, get_embedder
 from app.ai.extractor import AnthropicExtractor, Extractor
 from app.core.storage import Storage
 from app.models.document import AnalysisRun, Document
+from app.models.enrichment import Embedding
 from app.models.project import Project
 from app.services import project_service
+
+
+def _store_embedding(
+    db: Session, embedder: Embedder, *, tenant_id, project: Project
+) -> None:
+    chunk = " ".join(filter(None, [project.acronym, project.title, project.summary]))
+    if not chunk.strip():
+        return
+    db.add(
+        Embedding(
+            tenant_id=tenant_id,
+            owner_type="project",
+            owner_id=project.id,
+            chunk=chunk[:4000],
+            vector=embedder.embed(chunk),
+        )
+    )
 
 
 def analyze_document(
@@ -24,8 +43,10 @@ def analyze_document(
     extractor: Extractor,
     *,
     document: Document,
+    embedder: Embedder | None = None,
 ) -> Project:
     """Run extraction for one document. Raises on failure (after recording it)."""
+    embedder = embedder or get_embedder()
     model = (
         extractor.model if isinstance(extractor, AnthropicExtractor) else "fake"
     )
@@ -50,6 +71,7 @@ def analyze_document(
             document_id=document.id,
             extracted=extractor.extract(extracted.full_text),
         )
+        _store_embedding(db, embedder, tenant_id=document.tenant_id, project=project)
         run.status = "succeeded"
         run.finished_at = datetime.now(UTC)
         document.status = "done"
