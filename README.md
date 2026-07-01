@@ -10,9 +10,13 @@ for European organizations.
 
 ## Status
 
-🚧 **Milestone 2 — Document upload & management.** PDF upload to object storage with
-SHA-256 dedup, page counting, soft-delete, presigned downloads, and audit logging — on
-top of the Milestone 1 auth/tenancy foundation.
+✅ **Backend feature-complete (Milestones 0–10).** All backend modules are implemented
+and verified by an automated test suite (63 tests) running against real PostgreSQL:
+auth/tenancy/RBAC, document management, AI extraction, partner registry, search,
+analytics, exports, external enrichment, API keys, and GDPR/audit/billing.
+
+The web **frontend is a shell** so far (it displays API status). The dashboards/UI
+consume the analytics + REST endpoints and are the next build phase.
 
 See [docs/architecture/0001-architecture.md](docs/architecture/0001-architecture.md)
 for the full architecture and roadmap.
@@ -27,8 +31,8 @@ for the full architecture and roadmap.
 | Async jobs  | Celery + Redis |
 | Storage     | S3-compatible (MinIO in dev) |
 | Frontend    | Next.js 15 · TypeScript · Tailwind · shadcn/ui · TanStack Query |
-| Auth        | Clerk (managed) — JWT verified by the backend |
-| Exports     | openpyxl · python-docx · WeasyPrint · csv |
+| Auth        | Self-hosted JWT (access + refresh) · API keys for integrations |
+| Exports     | openpyxl · python-docx · reportlab · csv |
 
 ## Quick start (development)
 
@@ -106,19 +110,44 @@ docs/       Architecture decision records & API docs
 infra/      Deployment / IaC (added in a later milestone)
 ```
 
+## API overview
+
+All routes are under `/api/v1` and documented interactively at `/docs`.
+
+| Group | Routes |
+|-------|--------|
+| Auth | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `GET /auth/me` |
+| Users (admin) | `GET/POST /users`, `GET /users/{id}`, `POST /users/{id}/roles`, `/deactivate` |
+| Documents | `POST /documents`, `GET /documents`, `GET /{id}`, `/{id}/download`, `DELETE /{id}` |
+| Projects | `POST /projects/from-document/{id}`, `GET /projects`, `GET /{id}` |
+| Enrichment | `POST /projects/{id}/enrich`, `GET /projects/{id}/enrichment` |
+| Organizations | `GET /organizations`, `GET /{id}`, `PATCH /{id}`, `POST /{id}/merge` |
+| Search | `GET /search/projects` (facets), `GET /search/semantic` |
+| Analytics | `GET /analytics/summary`, `/projects-by-programme`, `/organizations-by-country`, `/status`, `/budget`, `/timeline` |
+| Export | `GET /export/projects.{csv,xlsx,docx,pdf}` |
+| API keys (admin) | `POST/GET /api-keys`, `DELETE /api-keys/{id}` |
+| Integrations (API key) | `GET /integrations/projects`, `/integrations/organizations` |
+| GDPR (admin) | `POST/GET /gdpr/requests`, `POST /gdpr/requests/{id}/process` |
+| Audit (admin) | `GET /audit` |
+| Billing (admin) | `GET/PUT /billing/plan` |
+
 ## Roadmap (milestones)
 
-0. **Scaffolding** ✅
+0. Scaffolding ✅
 1. Auth + tenancy + users/RBAC ✅
-2. Document upload & management ← current
-3. AI extraction pipeline (single proposal)
-4. Partner/organization registry + entity resolution
-5. Search & filtering
-6. Dashboards & analytics
-7. Exports (Excel / CSV / PDF / Word)
-8. External enrichment (CORDIS, Funding & Tenders Portal)
-9. Public REST API + API keys
-10. GDPR hardening + SaaS billing
+2. Document upload & management ✅
+3. AI extraction pipeline (single proposal) ✅
+4. Partner/organization registry + entity resolution ✅
+5. Search & filtering ✅
+6. Analytics endpoints (dashboard data) ✅
+7. Exports (Excel / CSV / PDF / Word) ✅
+8. External enrichment (CORDIS, Funding & Tenders Portal) ✅
+9. REST API + API keys ✅
+10. GDPR + audit + billing scaffold ✅
+
+**Next up (not yet built):** the web frontend (dashboards/UI on Next.js), moving
+extraction onto the Celery worker by default, real Anthropic/embedding/enrichment
+providers via keys, and production infra (non-superuser DB role for RLS, deployment).
 
 ## License
 
