@@ -6,6 +6,7 @@ from app.services import (
     document_service,
     extraction_service,
     org_resolution,
+    organization_service,
     project_service,
     user_service,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "document_service",
     "extraction_service",
     "org_resolution",
+    "organization_service",
     "project_service",
     "user_service",
 ]

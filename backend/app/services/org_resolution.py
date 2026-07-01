@@ -7,11 +7,15 @@ Milestone 4 layers fuzzy matching on top.
 
 import re
 import uuid
+from difflib import SequenceMatcher
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.organization import Organization
+
+# Names whose normalized keys are at least this similar are treated as the same org.
+FUZZY_THRESHOLD = 0.9
 
 _LEGAL_SUFFIXES = {
     "ltd", "limited", "gmbh", "srl", "spa", "sa", "sas", "bv", "nv", "oy", "ab",
@@ -50,6 +54,10 @@ def resolve_organization(
     if existing:
         return existing
 
+    fuzzy = _best_fuzzy_match(db, key)
+    if fuzzy is not None:
+        return fuzzy
+
     org = Organization(
         tenant_id=tenant_id,
         legal_name=legal_name,
@@ -61,3 +69,15 @@ def resolve_organization(
     db.add(org)
     db.flush()
     return org
+
+
+def _best_fuzzy_match(db: Session, key: str) -> Organization | None:
+    """Return the tenant org whose normalized_key is most similar to ``key``,
+    if the similarity meets the threshold. Session is already tenant-scoped."""
+    best: Organization | None = None
+    best_ratio = 0.0
+    for org in db.execute(select(Organization)).scalars():
+        ratio = SequenceMatcher(None, key, org.normalized_key).ratio()
+        if ratio > best_ratio:
+            best, best_ratio = org, ratio
+    return best if best_ratio >= FUZZY_THRESHOLD else None
