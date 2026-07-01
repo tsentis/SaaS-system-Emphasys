@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    analytics,
     auth,
     documents,
     health,
@@ -20,3 +21,4 @@ api_router.include_router(documents.router, prefix="/documents")
 api_router.include_router(projects.router, prefix="/projects")
 api_router.include_router(organizations.router, prefix="/organizations")
 api_router.include_router(search.router, prefix="/search")
+api_router.include_router(analytics.router, prefix="/analytics")
