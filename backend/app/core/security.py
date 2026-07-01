@@ -5,6 +5,8 @@ isolated means a future swap to a managed provider (Clerk/SSO) touches just this
 plus the auth dependency.
 """
 
+import hashlib
+import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Literal
@@ -13,6 +15,8 @@ import bcrypt
 import jwt
 
 from app.core.config import settings
+
+API_KEY_PREFIX = "emph_"
 
 TokenType = Literal["access", "refresh"]
 
@@ -62,6 +66,18 @@ def create_refresh_token(user_id: uuid.UUID, tenant_id: uuid.UUID) -> str:
         token_type="refresh",
         expires=timedelta(days=settings.refresh_token_expire_days),
     )
+
+
+# --- API keys ---
+
+def hash_api_key(raw: str) -> str:
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def generate_api_key() -> tuple[str, str]:
+    """Return (raw_key, hashed_key). The raw key is shown to the user only once."""
+    raw = API_KEY_PREFIX + secrets.token_urlsafe(32)
+    return raw, hash_api_key(raw)
 
 
 def decode_token(token: str, expected_type: TokenType) -> dict:

@@ -4,11 +4,13 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     analytics,
+    apikeys,
     auth,
     documents,
     enrichment,
     export,
     health,
+    integrations,
     organizations,
     projects,
     search,
@@ -26,3 +28,5 @@ api_router.include_router(organizations.router, prefix="/organizations")
 api_router.include_router(search.router, prefix="/search")
 api_router.include_router(analytics.router, prefix="/analytics")
 api_router.include_router(export.router, prefix="/export")
+api_router.include_router(apikeys.router, prefix="/api-keys")
+api_router.include_router(integrations.router, prefix="/integrations")

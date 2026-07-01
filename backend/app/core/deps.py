@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,7 @@ from app.core.security import decode_token
 from app.models.user import Role, User, UserRole
 
 bearer_scheme = HTTPBearer(auto_error=False)
+api_key_scheme = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 _CREDENTIALS_EXC = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -74,6 +75,37 @@ def get_current_user(
         full_name=user.full_name,
         roles=role_names,
     )
+
+
+@dataclass
+class ApiPrincipal:
+    """A machine principal authenticated by API key."""
+
+    tenant_id: uuid.UUID
+    key_id: uuid.UUID
+    scopes: set[str]
+
+
+def get_api_principal(
+    api_key: str | None = Depends(api_key_scheme),
+    db: Session = Depends(get_db),
+) -> ApiPrincipal:
+    """Authenticate via ``X-API-Key`` and bind the tenant to the session."""
+    from app.services import apikey_service
+
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing API key"
+        )
+    key = apikey_service.authenticate(db, api_key)
+    if key is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key"
+        )
+    bind_tenant(db, key.tenant_id)
+    apikey_service.touch(db, key)
+    scopes = set(filter(None, (key.scopes or "").split(",")))
+    return ApiPrincipal(tenant_id=key.tenant_id, key_id=key.id, scopes=scopes)
 
 
 def require_roles(*allowed: str):
