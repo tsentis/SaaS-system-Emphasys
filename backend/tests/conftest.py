@@ -85,5 +85,16 @@ def client(engine):
     app.dependency_overrides.clear()
 
     with engine.begin() as conn:
-        for table in ("audit_log", "documents", "user_roles", "users", "tenants"):
+        for table in (
+            "audit_log",
+            "project_partners",
+            "work_packages",
+            "analysis_runs",
+            "projects",
+            "organizations",
+            "documents",
+            "user_roles",
+            "users",
+            "tenants",
+        ):
             conn.execute(text(f"DELETE FROM {table}"))
