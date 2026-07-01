@@ -6,6 +6,7 @@ from app.api.v1 import (
     analytics,
     auth,
     documents,
+    export,
     health,
     organizations,
     projects,
@@ -22,3 +23,4 @@ api_router.include_router(projects.router, prefix="/projects")
 api_router.include_router(organizations.router, prefix="/organizations")
 api_router.include_router(search.router, prefix="/search")
 api_router.include_router(analytics.router, prefix="/analytics")
+api_router.include_router(export.router, prefix="/export")

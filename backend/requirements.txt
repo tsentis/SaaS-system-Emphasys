@@ -20,6 +20,11 @@ boto3==1.35.90
 # ---- PDF handling ----
 pypdf==5.1.0
 
+# ---- Exports (xlsx / docx / pdf) ----
+openpyxl==3.1.5
+python-docx==1.1.2
+reportlab==4.2.5
+
 # ---- AI ----
 anthropic==0.42.0
 
