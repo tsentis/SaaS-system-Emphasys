@@ -2,6 +2,7 @@
 
 import uuid
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.governance import AuditLog
@@ -28,3 +29,11 @@ def record(
         )
     )
     db.commit()
+
+
+def list_recent(db: Session, limit: int = 100) -> list[AuditLog]:
+    return list(
+        db.execute(
+            select(AuditLog).order_by(AuditLog.created_at.desc()).limit(limit)
+        ).scalars()
+    )

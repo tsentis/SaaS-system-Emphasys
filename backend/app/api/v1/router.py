@@ -5,10 +5,13 @@ from fastapi import APIRouter
 from app.api.v1 import (
     analytics,
     apikeys,
+    audit,
     auth,
+    billing,
     documents,
     enrichment,
     export,
+    gdpr,
     health,
     integrations,
     organizations,
@@ -30,3 +33,6 @@ api_router.include_router(analytics.router, prefix="/analytics")
 api_router.include_router(export.router, prefix="/export")
 api_router.include_router(apikeys.router, prefix="/api-keys")
 api_router.include_router(integrations.router, prefix="/integrations")
+api_router.include_router(gdpr.router, prefix="/gdpr")
+api_router.include_router(audit.router, prefix="/audit")
+api_router.include_router(billing.router, prefix="/billing")
